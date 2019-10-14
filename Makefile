@@ -25,7 +25,7 @@ prepare:clean
 build-lsfeventsbeat:	prepare
     # get source code of filebeat to build lsfeventsbeat
 	@mkdir -p ${BUILDTMP}/src/github.com/elastic
-	@cd ${BUILDTMP}/src/github.com/elastic; git clone -b v6.8.3 https://github.com/elastic/beats.git
+	@cd ${BUILDTMP}/src/github.com/elastic; git clone -b v${BEATS_VERSION} https://github.com/elastic/beats.git
     # overwrite some files with our modified versions
 	@cp -rf src/filebeat/parselsb ${FILEBEAT_DIR}/
 	@cp -rf src/filebeat/log/* ${FILEBEAT_DIR}/input/log/

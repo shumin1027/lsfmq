@@ -33,8 +33,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -51,7 +51,6 @@ import (
 	"github.com/elastic/beats/filebeat/channel"
 	"github.com/elastic/beats/filebeat/harvester"
 	"github.com/elastic/beats/filebeat/input/file"
-	. "github.com/elastic/beats/filebeat/parselsb"
 	"github.com/elastic/beats/filebeat/reader"
 	"github.com/elastic/beats/filebeat/reader/docker_json"
 	"github.com/elastic/beats/filebeat/reader/json"
@@ -59,6 +58,8 @@ import (
 	"github.com/elastic/beats/filebeat/reader/readfile"
 	"github.com/elastic/beats/filebeat/reader/readfile/encoding"
 	"github.com/elastic/beats/filebeat/util"
+
+	. "github.com/elastic/beats/filebeat/parselsb"
 )
 
 var (
@@ -356,8 +357,9 @@ func (h *Harvester) Run() error {
 					fields = common.MapStr{}
 				}
 
+				//fields["message"] = text
 
-					oldTxt := text
+				oldTxt := text
 
 				// lsf events are just raw string
 				if strings.Contains(h.state.Source, "lsb.stream") {
@@ -394,9 +396,7 @@ func (h *Harvester) Run() error {
 				}
 
 				fields["message"] = msg.Text
-
-			data.Event.Fields = fields
-			// specify the topic name and routing key exactly
+				// specify the topic name and routing key exactly
 				if data.Event.Meta == nil {
 					data.Event.Meta = common.MapStr{}
 				}
@@ -406,15 +406,14 @@ func (h *Harvester) Run() error {
 				data.Event.Meta["routing"] = msg.RoutingKey
 				if msg.Props != nil {
 					data.Event.Meta["properties"] = msg.Props
-		}
+					data.Event.Fields = fields
+				}
 
-
-		// Always send event to update state, also if lines was skipped
-		// Stop harvester in case of an error
-		if !h.sendEvent(data, forwarder) {
-			return nil
-		}
-
+				// Always send event to update state, also if lines was skipped
+				// Stop harvester in case of an error
+				if !h.sendEvent(data, forwarder) {
+					return nil
+				}
 			}
 		}
 		// Update state of harvester as successfully sent

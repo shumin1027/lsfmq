@@ -19,15 +19,15 @@ package log
 
 import (
 	"fmt"
+	"github.com/elastic/beats/filebeat/parselsb"
 	"path/filepath"
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/elastic/beats/filebeat/parselsb"
+
 	cfg "github.com/elastic/beats/filebeat/config"
 	"github.com/elastic/beats/filebeat/harvester"
 	"github.com/elastic/beats/filebeat/input/file"
-	"github.com/elastic/beats/filebeat/parselsb"
 	"github.com/elastic/beats/filebeat/reader/json"
 	"github.com/elastic/beats/filebeat/reader/multiline"
 	"github.com/elastic/beats/libbeat/common/cfgwarn"
