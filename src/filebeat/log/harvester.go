@@ -33,10 +33,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+	"os"
 	"sync"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"golang.org/x/text/transform"
+
+	"github.com/elastic/beats/libbeat/beat"
+	"github.com/elastic/beats/libbeat/common"
+	file_helper "github.com/elastic/beats/libbeat/common/file"
+	"github.com/elastic/beats/libbeat/logp"
+	"github.com/elastic/beats/libbeat/monitoring"
+	"github.com/elastic/beats/libbeat/reader/debug"
 
 	"github.com/elastic/beats/filebeat/channel"
 	"github.com/elastic/beats/filebeat/harvester"
@@ -44,20 +54,11 @@ import (
 	. "github.com/elastic/beats/filebeat/parselsb"
 	"github.com/elastic/beats/filebeat/reader"
 	"github.com/elastic/beats/filebeat/reader/docker_json"
-	"github.com/elastic/beats/filebeat/reader/encode"
-	"github.com/elastic/beats/filebeat/reader/encode/encoding"
 	"github.com/elastic/beats/filebeat/reader/json"
-	"github.com/elastic/beats/filebeat/reader/limit"
 	"github.com/elastic/beats/filebeat/reader/multiline"
-	"github.com/elastic/beats/filebeat/reader/strip_newline"
+	"github.com/elastic/beats/filebeat/reader/readfile"
+	"github.com/elastic/beats/filebeat/reader/readfile/encoding"
 	"github.com/elastic/beats/filebeat/util"
-	"github.com/elastic/beats/libbeat/beat"
-	"github.com/elastic/beats/libbeat/common"
-	file_helper "github.com/elastic/beats/libbeat/common/file"
-	"github.com/elastic/beats/libbeat/logp"
-	"github.com/elastic/beats/libbeat/monitoring"
-	"github.com/satori/go.uuid"
-	"golang.org/x/text/transform"
 )
 
 var (
@@ -116,6 +117,11 @@ func NewHarvester(
 	outletFactory OutletFactory,
 ) (*Harvester, error) {
 
+	id, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
 	h := &Harvester{
 		config:        defaultConfig,
 		state:         state,
@@ -123,7 +129,7 @@ func NewHarvester(
 		publishState:  publishState,
 		done:          make(chan struct{}),
 		stopWg:        &sync.WaitGroup{},
-		id:            uuid.NewV4(),
+		id:            id,
 		outletFactory: outletFactory,
 	}
 
@@ -281,6 +287,10 @@ func (h *Harvester) Run() error {
 				logp.Info("End of file reached: %s. Closing because close_eof is enabled.", h.state.Source)
 			case ErrInactive:
 				logp.Info("File is inactive: %s. Closing because close_inactive of %v reached.", h.state.Source, h.config.CloseInactive)
+			case reader.ErrLineUnparsable:
+				logp.Info("Skipping unparsable line in file: %v", h.state.Source)
+				//line unparsable, go to next line
+				continue
 			default:
 				logp.Err("Read line error: %v; File: %v", err, h.state.Source)
 			}
@@ -316,6 +326,11 @@ func (h *Harvester) Run() error {
 			fields := common.MapStr{
 				"source": state.Source,
 				"offset": startingOffset, // Offset here is the offset before the starting char.
+				"log": common.MapStr{
+					"file": common.MapStr{
+						"path": state.Source,
+					},
+				},
 			}
 			fields.DeepUpdate(message.Fields)
 
@@ -341,7 +356,8 @@ func (h *Harvester) Run() error {
 					fields = common.MapStr{}
 				}
 
-				oldTxt := text
+
+					oldTxt := text
 
 				// lsf events are just raw string
 				if strings.Contains(h.state.Source, "lsb.stream") {
@@ -363,6 +379,7 @@ func (h *Harvester) Run() error {
 					// some events (e.g. MBD_START) are not parsed but we want to continue
 					// just return
 				}
+
 			}
 
 			// deal with multiple parsed results
@@ -377,9 +394,9 @@ func (h *Harvester) Run() error {
 				}
 
 				fields["message"] = msg.Text
-				data.Event.Fields = fields
 
-				// specify the topic name and routing key exactly
+			data.Event.Fields = fields
+			// specify the topic name and routing key exactly
 				if data.Event.Meta == nil {
 					data.Event.Meta = common.MapStr{}
 				}
@@ -389,16 +406,17 @@ func (h *Harvester) Run() error {
 				data.Event.Meta["routing"] = msg.RoutingKey
 				if msg.Props != nil {
 					data.Event.Meta["properties"] = msg.Props
-				}
-
-				// Always send event to update state, also if lines was skipped
-				// Stop harvester in case of an error
-				if !h.sendEvent(data, forwarder) {
-					return nil
-				}
-			}
 		}
 
+
+		// Always send event to update state, also if lines was skipped
+		// Stop harvester in case of an error
+		if !h.sendEvent(data, forwarder) {
+			return nil
+		}
+
+			}
+		}
 		// Update state of harvester as successfully sent
 		h.state = state
 	}
@@ -609,21 +627,26 @@ func (h *Harvester) newLogFileReader() (reader.Reader, error) {
 		return nil, err
 	}
 
-	r, err = encode.New(h.log, h.encoding, h.config.BufferSize)
+	reader, err := debug.AppendReaders(h.log)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err = readfile.NewEncodeReader(reader, h.encoding, h.config.BufferSize)
 	if err != nil {
 		return nil, err
 	}
 
 	if h.config.DockerJSON != nil {
 		// Docker json-file format, add custom parsing to the pipeline
-		r = docker_json.New(r, h.config.DockerJSON.Stream, h.config.DockerJSON.Partial, h.config.DockerJSON.CRIFlags)
+		r = docker_json.New(r, h.config.DockerJSON.Stream, h.config.DockerJSON.Partial, h.config.DockerJSON.ForceCRI, h.config.DockerJSON.CRIFlags)
 	}
 
 	if h.config.JSON != nil {
 		r = json.New(r, h.config.JSON)
 	}
 
-	r = strip_newline.New(r)
+	r = readfile.NewStripNewline(r)
 
 	if h.config.Multiline != nil {
 		r, err = multiline.New(r, "\n", h.config.MaxBytes, h.config.Multiline)
@@ -632,5 +655,5 @@ func (h *Harvester) newLogFileReader() (reader.Reader, error) {
 		}
 	}
 
-	return limit.New(r, h.config.MaxBytes), nil
+	return readfile.NewLimitReader(r, h.config.MaxBytes), nil
 }

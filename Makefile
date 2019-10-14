@@ -6,7 +6,7 @@ BUILD_YEAR=$(shell date +%Y)
 BUILD_TIME=${BUILD_DAY} ${BUILD_MONTH}, ${BUILD_YEAR}
 CURRENT_DIR=$(shell pwd)
 
-BEATS_VERSION=6.4.2
+BEATS_VERSION=6.8.3
 
 _arch=x86_64
 _os=linux-${_arch}
@@ -25,7 +25,7 @@ prepare:clean
 build-lsfeventsbeat:	prepare
     # get source code of filebeat to build lsfeventsbeat
 	@mkdir -p ${BUILDTMP}/src/github.com/elastic
-	@cd ${BUILDTMP}/src/github.com/elastic; git clone -b v6.4.2 https://github.com/elastic/beats.git
+	@cd ${BUILDTMP}/src/github.com/elastic; git clone -b v6.8.3 https://github.com/elastic/beats.git
     # overwrite some files with our modified versions
 	@cp -rf src/filebeat/parselsb ${FILEBEAT_DIR}/
 	@cp -rf src/filebeat/log/* ${FILEBEAT_DIR}/input/log/

@@ -23,11 +23,11 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-
 	"github.com/elastic/beats/filebeat/parselsb"
 	cfg "github.com/elastic/beats/filebeat/config"
 	"github.com/elastic/beats/filebeat/harvester"
 	"github.com/elastic/beats/filebeat/input/file"
+	"github.com/elastic/beats/filebeat/parselsb"
 	"github.com/elastic/beats/filebeat/reader/json"
 	"github.com/elastic/beats/filebeat/reader/multiline"
 	"github.com/elastic/beats/libbeat/common/cfgwarn"
@@ -105,11 +105,12 @@ type config struct {
 
 	// define the lsf events topic related options
 	LsfTopics []parselsb.Topic `config:"lsf_topics"`
-	
+
 	// Hidden on purpose, used by the docker input:
 	DockerJSON *struct {
 		Stream   string `config:"stream"`
 		Partial  bool   `config:"partial"`
+		ForceCRI bool   `config:"force_cri_logs"`
 		CRIFlags bool   `config:"cri_flags"`
 	} `config:"docker-json"`
 }
