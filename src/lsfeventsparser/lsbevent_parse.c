@@ -81,7 +81,7 @@ typedef long long int LONGLONG;
 #if defined(DEBUG)
 #define TRACE(...)	printf(__VA_ARGS__)
 #else
-#define TRACE(...)	
+#define TRACE(...)
 #endif
 
 
@@ -1282,7 +1282,7 @@ static void putJobNew(Json4c *objHashMap, struct eventRec *logrec) {
 	// modified by zk on 2017-04-18 to add nested object for rlimit values
 	Json4c * rlimitObj = jCreateObject();
 	putRLimitArray(rlimitObj, logrec->eventLog.jobNewLog.rLimits);
-	addInstanceToObject(objHashMap, FIELD_RESOURCE_LIMIT, rlimitObj);	
+	addInstanceToObject(objHashMap, FIELD_RESOURCE_LIMIT, rlimitObj);
 
 	addStringToObject(objHashMap, FIELD_HOST_SPEC,
 				logrec->eventLog.jobNewLog.hostSpec);
@@ -1382,12 +1382,12 @@ static void putJobNew(Json4c *objHashMap, struct eventRec *logrec) {
 
 	if (logrec->eventLog.jobNewLog.jobName == NULL
 			|| strlen(logrec->eventLog.jobNewLog.jobName) == 0) {
-		addStringToObject(objHashMap, FIELD_JOB_NAME,
-						logrec->eventLog.jobNewLog.command);
-
-		addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,
-						logrec->eventLog.jobNewLog.command);
-
+//		addStringToObject(objHashMap, FIELD_JOB_NAME,
+//						logrec->eventLog.jobNewLog.command);
+        addStringToObject(objHashMap, FIELD_JOB_NAME,NULL);
+//		addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,
+//						logrec->eventLog.jobNewLog.command);
+        addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,NULL);
 	} else {
 		addStringToObject(objHashMap,FIELD_JOB_NAME,
 					logrec->eventLog.jobNewLog.jobName);
@@ -1395,8 +1395,9 @@ static void putJobNew(Json4c *objHashMap, struct eventRec *logrec) {
 		addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,
 						logrec->eventLog.jobNewLog.jobName);
 	}
-	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
-			logrec->eventLog.jobNewLog.command);
+//	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
+//			logrec->eventLog.jobNewLog.command);
+    addStringToObject(objHashMap, FIELD_JOB_COMMAND,NULL);
 	addStringToObject(objHashMap, FIELD_PREEXEC_CMD,
 				logrec->eventLog.jobNewLog.preExecCmd);
 
@@ -1721,7 +1722,7 @@ static void putJobStatus(Json4c *objHashMap, struct eventRec *logrec) {
 static void putJobSwitch(Json4c *objHashMap, struct eventRec *logrec) {
 	putJobHEAD(objHashMap, logrec);
 	addNumberToObject(objHashMap, FIELD_JOB_ID, logrec->eventLog.jobSwitchLog.jobId);
-	
+
 	addNumberToObject(objHashMap, FIELD_UID, logrec->eventLog.jobSwitchLog.userId);
 
 	addStringToObject(objHashMap, FIELD_QUEUE_NAME, logrec->eventLog.jobSwitchLog.queue);
@@ -1764,7 +1765,7 @@ static void putJobSwitch(Json4c *objHashMap, struct eventRec *logrec) {
  */
 static void putJobMove(Json4c *objHashMap, struct eventRec *logrec) {
 	putJobHEAD(objHashMap, logrec);
-	
+
 	addNumberToObject(objHashMap, FIELD_UID, logrec->eventLog.jobMoveLog.userId);
 
 	addNumberToObject(objHashMap, FIELD_JOB_ID, logrec->eventLog.jobMoveLog.jobId);
@@ -1927,7 +1928,7 @@ static void putJobFinish(Json4c *objHashMap, struct eventRec *logrec) {
 		expFactor = totalTime * 1.0 / logrec->eventLog.jobFinishLog.runTime;
 	}
 	addNumberToObject(objHashMap, FIELD_EXPAND_FACTOR, expFactor);
-	
+
 	// add effective_res_req on 2016/10/17 by zk
 	addStringToObject(objHashMap, FIELD_EFFECTIVE_RES_REQ, logrec->eventLog.jobFinishLog.effectiveResReq);
 #endif
@@ -1985,7 +1986,7 @@ static void putJobFinish(Json4c *objHashMap, struct eventRec *logrec) {
 	addStringToObject(objHashMap, FIELD_RES_REQ, logrec->eventLog.jobFinishLog.resReq);
 
 	addStringToObject(objHashMap, FIELD_SUBMISSION_HOST_NAME, logrec->eventLog.jobFinishLog.fromHost);
-	
+
 	gmt = (int)logrec->eventLog.jobFinishLog.submitTime;
     addNumberToObject(objHashMap, FIELD_SUBMIT_TIME_UTC,gmt*1000);
     gmt = (int) logrec->eventLog.jobFinishLog.startTime;
@@ -2063,11 +2064,12 @@ static void putJobFinish(Json4c *objHashMap, struct eventRec *logrec) {
 
 	if (logrec->eventLog.jobFinishLog.jobName == NULL
 			|| strlen(logrec->eventLog.jobFinishLog.jobName) == 0) {
-		addStringToObject(objHashMap, FIELD_JOB_NAME,
-						logrec->eventLog.jobFinishLog.command);
-
-		addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,
-						logrec->eventLog.jobFinishLog.command);
+//		addStringToObject(objHashMap, FIELD_JOB_NAME,
+//						logrec->eventLog.jobFinishLog.command);
+        addStringToObject(objHashMap, FIELD_JOB_NAME,NULL);
+//		addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,
+//						logrec->eventLog.jobFinishLog.command);
+        addStringToObject(objHashMap, FIELD_JOB_NAME_FULL,NULL);
 	} else {
 		addStringToObject(objHashMap, FIELD_JOB_NAME,
 					logrec->eventLog.jobFinishLog.jobName);
@@ -2076,8 +2078,10 @@ static void putJobFinish(Json4c *objHashMap, struct eventRec *logrec) {
 
 	}
 
-	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
-			logrec->eventLog.jobFinishLog.command);
+//	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
+//			logrec->eventLog.jobFinishLog.command);
+    addStringToObject(objHashMap, FIELD_JOB_COMMAND,NULL);
+
 	addStringToObject(objHashMap, FIELD_DEPEND_COND,
 				logrec->eventLog.jobFinishLog.dependCond);
 
@@ -2422,7 +2426,8 @@ static Json4c *getJobFinish2HashmapArray(struct eventRec *logrec) {
 
 	addStringToObject(objHost, FIELD_JOB_NAME, logrec->eventLog.jobFinish2Log.jobName);
 
-	addStringToObject(objHost, FIELD_JOB_COMMAND, logrec->eventLog.jobFinish2Log.command);
+//	addStringToObject(objHost, FIELD_JOB_COMMAND, logrec->eventLog.jobFinish2Log.command);
+	addStringToObject(objHost, FIELD_JOB_COMMAND, NULL);
 	addStringToObject(objHost, FIELD_PREEXEC_CMD, logrec->eventLog.jobFinish2Log.preExecCmd);
 
 	addStringToObject(objHost, FIELD_PROJECT_NAME, logrec->eventLog.jobFinish2Log.projectName);
@@ -2688,7 +2693,8 @@ static void putJobFinish2(Json4c *objHost, struct eventRec *logrec) {
 
 	addStringToObject(objHost, FIELD_JOB_NAME, logrec->eventLog.jobFinish2Log.jobName);
 
-	addStringToObject(objHost, FIELD_JOB_COMMAND, logrec->eventLog.jobFinish2Log.command);
+//	addStringToObject(objHost, FIELD_JOB_COMMAND, logrec->eventLog.jobFinish2Log.command);
+	addStringToObject(objHost, FIELD_JOB_COMMAND, NULL);
 	addStringToObject(objHost, FIELD_PREEXEC_CMD, logrec->eventLog.jobFinish2Log.preExecCmd);
 
 	addStringToObject(objHost, FIELD_PROJECT_NAME, logrec->eventLog.jobFinish2Log.projectName);
@@ -3171,8 +3177,9 @@ static void putJobModify2(Json4c *objHashMap, struct eventRec *logrec) {
 	addStringToObject(objHashMap, FIELD_ERR_FILE,
 				logrec->eventLog.jobModLog.errFile);
 
-	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
-			logrec->eventLog.jobModLog.command);
+//	addStringToObject(objHashMap, FIELD_JOB_COMMAND,
+//			logrec->eventLog.jobModLog.command);
+    addStringToObject(objHashMap, FIELD_JOB_COMMAND,NULL);
 
 	addStringToObject(objHashMap, FIELD_IN_FILE_SPOOL,
 			logrec->eventLog.jobModLog.inFileSpool);
@@ -3965,7 +3972,7 @@ static void putJRusage(Json4c *objHashMap, struct jRusage *jrusage) {
 	char *temp = NULL;
 	char *pgid = NULL;
 	int i = 0, j = 0;
-	
+
 	// added nested rusage object by zk on 2017-04-18
 	Json4c *rusage = jCreateObject();
 	addInstanceToObject(objHashMap, FIELD_RUN_RUSAGE, rusage);
@@ -4063,7 +4070,7 @@ static void putSBDUnreportedStatus(Json4c *objHashMap, struct eventRec *logrec) 
 
 	addNumberToObject(objHashMap, FIELD_JOB_PGID,
 			logrec->eventLog.sbdUnreportedStatusLog.jobPGid);
-			
+
 	addNumberToObject(objHashMap, FIELD_JOB_STATUS_CODE,
 				logrec->eventLog.sbdUnreportedStatusLog.newStatus);
 
@@ -4270,7 +4277,7 @@ static void putMetricLog(Json4c *objHashMap, struct eventRec *logrec) {
 	addNumberToObject(objHashMap, FIELD_JOB_ARRAY_IDX, 0);
 
 	addNumberToObject(objHashMap, FIELD_JOB_STATUS_CODE, -1);
-	
+
 	addNumberToObject(objHashMap, FIELD_JOB_PID, -1);
 
 	addNumberToObject(objHashMap, FIELD_METRIC_JOBS_TO_REMOTE,
@@ -4523,7 +4530,7 @@ static void putJobStatus2(Json4c *objHost, struct eventRec *logrec) {
 	lsfArrayIdx = LSB_ARRAY_IDX(logrec->eventLog.jobStatus2Log.jobId);
 	lsfJobId = LSB_ARRAY_JOBID(logrec->eventLog.jobStatus2Log.jobId);
 	putJobHEAD(objHost, logrec);
-	
+
 	addNumberToObject(objHost, FIELD_JOB_ID, lsfJobId);
 
 	addNumberToObject(objHost, FIELD_JOB_ARRAY_IDX, lsfArrayIdx);
@@ -4635,7 +4642,7 @@ static void putJobStatus2(Json4c *objHost, struct eventRec *logrec) {
 	}
 	addNumberToObject(objHost, FIELD_RUNTIME_DELTA,
 				logrec->eventLog.jobStatus2Log.runtimeDelta);
-				
+
 	addNumberToObject(objHost, FIELD_REMOTE_ATT,
 			logrec->eventLog.jobStatus2Log.jobRmtAttr);
 
@@ -4806,7 +4813,7 @@ static void putJobStatus2Pend(Json4c *objHost, struct eventRec *logrec) {
 
 	addNumberToObject(objHost, FIELD_NUM_EXEC_PROCESSORS,
 			logrec->eventLog.jobStatus2Log.num_processors);
-			
+
 	addNumberToObject(objHost, FIELD_NUM_JOBS,
 				logrec->eventLog.jobStatus2Log.numJobs);
 
